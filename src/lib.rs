@@ -13,16 +13,36 @@ pub fn yes_or_no(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         }
 
         impl #name {
-            pub fn from_bool(flag: bool) -> Self {
-                flag.into()
+            pub const fn from_bool(flag: bool) -> Self {
+                if flag {
+                    Self::Yes
+                } else {
+                    Self::No
+                }
             }
 
-            pub fn yes(self) -> bool {
+            pub const fn yes(self) -> bool {
                 matches!(self, Self::Yes)
             }
 
-            pub fn no(self) -> bool {
+            pub const fn no(self) -> bool {
                 matches!(self, Self::No)
+            }
+
+            pub const fn and(self, other: Self) -> Self {
+                Self::from_bool(self.yes() & other.yes())
+            }
+
+            pub const fn or(self, other: Self) -> Self {
+                Self::from_bool(self.yes() | other.yes())
+            }
+
+            pub const fn xor(self, other: Self) -> Self {
+                Self::from_bool(self.yes() ^ other.yes())
+            }
+
+            pub const fn not(self) -> Self {
+                Self::from_bool(self.no())
             }
         }
 
@@ -34,11 +54,7 @@ pub fn yes_or_no(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
         impl From<bool> for #name {
             fn from(flag: bool) -> Self {
-                if flag {
-                    Self::Yes
-                } else {
-                    Self::No
-                }
+                Self::from_bool(flag)
             }
         }
 
@@ -48,15 +64,53 @@ pub fn yes_or_no(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             }
         }
 
+        impl std::ops::BitAnd for #name {
+            type Output = Self;
+
+            fn bitand(self, other: Self) -> Self::Output {
+                self.and(other)
+            }
+        }
+
+        impl std::ops::BitAndAssign for #name {
+            fn bitand_assign(&mut self, other: Self) {
+                *self = self.and(other);
+            }
+        }
+
+        impl std::ops::BitOr for #name {
+            type Output = Self;
+
+            fn bitor(self, other: Self) -> Self::Output {
+                self.or(other)
+            }
+        }
+
+        impl std::ops::BitOrAssign for #name {
+            fn bitor_assign(&mut self, other: Self) {
+                *self = self.or(other);
+            }
+        }
+
+        impl std::ops::BitXor for #name {
+            type Output = Self;
+
+            fn bitxor(self, other: Self) -> Self::Output {
+                self.xor(other)
+            }
+        }
+
+        impl std::ops::BitXorAssign for #name {
+            fn bitxor_assign(&mut self, other: Self) {
+                *self = self.xor(other);
+            }
+        }
+
         impl std::ops::Not for #name {
             type Output = Self;
 
             fn not(self) -> Self::Output {
-                if self.yes() {
-                    Self::No
-                } else {
-                    Self::Yes
-                }
+                self.not()
             }
         }
     };
