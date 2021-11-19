@@ -1,13 +1,28 @@
 use quote::quote;
-use syn::parse_macro_input;
+use syn::{
+    parse::{Parse, ParseStream, Result},
+    parse_macro_input,
+};
+
+struct YesOrNo {
+    vis: syn::Visibility,
+    name: syn::Ident,
+}
+
+impl Parse for YesOrNo {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let vis = input.parse()?;
+        let name = input.parse()?;
+        Ok(Self { vis, name })
+    }
+}
 
 #[proc_macro]
 pub fn yes_or_no(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let name = parse_macro_input!(input as syn::Ident);
-
+    let YesOrNo { vis, name } = parse_macro_input!(input as YesOrNo);
     let expanded = quote! {
         #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, serde::Deserialize, serde::Serialize)]
-        pub enum #name {
+        #vis enum #name {
             Yes,
             No,
         }
@@ -114,6 +129,6 @@ pub fn yes_or_no(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             }
         }
     };
-    //panic!("{}", expanded.to_string());
+    // panic!("{}", expanded.to_string());
     expanded.into()
 }
