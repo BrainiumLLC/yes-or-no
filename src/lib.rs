@@ -20,18 +20,17 @@ impl Parse for YesOrNo {
 #[proc_macro]
 pub fn yes_or_no(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let YesOrNo { vis, name } = parse_macro_input!(input as YesOrNo);
-    let derive = {
+    let serde_derive = {
         #[cfg(feature = "serde")]
         quote! {
-            #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, serde::Deserialize, serde::Serialize)]
+            #[derive(serde::Deserialize, serde::Serialize)]
         }
         #[cfg(not(feature = "serde"))]
-        quote! {
-            #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-        }
+        quote! {}
     };
     let expanded = quote! {
-        #derive
+        #serde_derive
+        #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
         #vis enum #name {
             No,
             Yes,
