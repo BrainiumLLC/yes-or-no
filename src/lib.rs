@@ -37,17 +37,15 @@ pub fn yes_or_no(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         let default_derives: syn::punctuated::Punctuated<syn::Expr, syn::token::Comma> =
             parse_quote! {Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd};
         let mut derives = syn::punctuated::Punctuated::<syn::Expr, syn::token::Comma>::new();
+        let mut derive_set = HashSet::new();
         for default_derive in default_derives.into_iter() {
-            if extra_derives
-                .iter()
-                .find(|extra| default_derive.eq(extra))
-                .is_none()
-            {
-                derives.push(default_derive);
-            }
+            derive_set.insert(default_derive);
         }
         for extra_derive in extra_derives.into_iter() {
-            derives.push(extra_derive);
+            derive_set.insert(extra_derive);
+        }
+        for derive in derive_set.into_iter() {
+            derives.push(derive);
         }
         derives
     };
