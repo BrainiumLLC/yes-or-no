@@ -17,7 +17,7 @@ proc-macro = true
 [dependencies]
 proc-macro2 = "1"
 quote = "1"
-syn = "1"
+syn = {version = "1", features = ["default", "extra-traits"] }
 
 [dev-dependencies]
 serde = { version = "1", features = ["derive"] }
