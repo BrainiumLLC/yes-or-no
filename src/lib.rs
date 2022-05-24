@@ -7,26 +7,30 @@ use syn::{
 struct YesOrNo {
     vis: syn::Visibility,
     name: syn::Ident,
+    serde: Option<syn::LitBool>,
 }
 
 impl Parse for YesOrNo {
     fn parse(input: ParseStream) -> Result<Self> {
         let vis = input.parse()?;
         let name = input.parse()?;
-        Ok(Self { vis, name })
+        let _comma: Option<syn::token::Comma> = input.parse()?;
+        let serde = input.parse()?;
+        Ok(Self { vis, name, serde })
     }
 }
 
 #[proc_macro]
 pub fn yes_or_no(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let YesOrNo { vis, name } = parse_macro_input!(input as YesOrNo);
+    let YesOrNo { vis, name, serde } = parse_macro_input!(input as YesOrNo);
     let serde_derive = {
-        #[cfg(feature = "serde")]
-        quote! {
-            #[derive(serde::Deserialize, serde::Serialize)]
+        if let Some(true) = serde.map(|lit| lit.value()) {
+            quote! {
+                #[derive(serde::Deserialize, serde::Serialize)]
+            }
+        } else {
+            quote! {}
         }
-        #[cfg(not(feature = "serde"))]
-        quote! {}
     };
     let expanded = quote! {
         #serde_derive
