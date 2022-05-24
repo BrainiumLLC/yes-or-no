@@ -1,36 +1,60 @@
+use std::collections::HashSet;
+
 use quote::quote;
 use syn::{
     parse::{Parse, ParseStream, Result},
-    parse_macro_input,
+    parse_macro_input, parse_quote,
 };
 
 struct YesOrNo {
     vis: syn::Visibility,
     name: syn::Ident,
+    extra_derives: syn::punctuated::Punctuated<syn::Expr, syn::token::Comma>,
 }
 
 impl Parse for YesOrNo {
     fn parse(input: ParseStream) -> Result<Self> {
         let vis = input.parse()?;
         let name = input.parse()?;
-        Ok(Self { vis, name })
+        let _comma: Option<syn::token::Comma> = input.parse()?;
+        let extra_derives = input.parse_terminated(syn::Expr::parse)?;
+        Ok(Self {
+            vis,
+            name,
+            extra_derives,
+        })
     }
 }
 
 #[proc_macro]
 pub fn yes_or_no(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let YesOrNo { vis, name } = parse_macro_input!(input as YesOrNo);
-    let serde_derive = {
-        #[cfg(feature = "serde")]
-        quote! {
-            #[derive(serde::Deserialize, serde::Serialize)]
+    let YesOrNo {
+        vis,
+        name,
+        extra_derives,
+    } = parse_macro_input!(input as YesOrNo);
+    let derives = {
+        let default_derives: syn::punctuated::Punctuated<syn::Expr, syn::token::Comma> =
+            parse_quote! {Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd};
+        let mut derive_set = HashSet::new();
+        let mut derives = syn::punctuated::Punctuated::<syn::Expr, syn::token::Comma>::new();
+        for default_derive in default_derives.into_iter() {
+            if !derive_set.contains(&default_derive) {
+                derives.push(default_derive.clone());
+            }
+            derive_set.insert(default_derive);
         }
-        #[cfg(not(feature = "serde"))]
-        quote! {}
+        for extra_derive in extra_derives.into_iter() {
+            if !derive_set.contains(&extra_derive) {
+                derives.push(extra_derive.clone());
+            }
+            derive_set.insert(extra_derive);
+        }
+        derives
     };
+
     let expanded = quote! {
-        #serde_derive
-        #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+        #[derive(#derives)]
         #vis enum #name {
             No,
             Yes,

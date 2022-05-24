@@ -1,6 +1,7 @@
 use yes_or_no::yes_or_no;
 
 yes_or_no!(Hungry);
+yes_or_no!(HungrySerde, serde::Deserialize, serde::Serialize);
 
 fn main() {
     assert_eq!(Hungry::from(true), Hungry::Yes);
