@@ -120,6 +120,22 @@ pub fn yes_or_no(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             }
         }
 
+        impl std::ops::BitAnd<bool> for #name {
+            type Output = bool;
+
+            fn bitand(self, other: bool) -> Self::Output {
+                self.yes() & other
+            }
+        }
+
+        impl std::ops::BitAnd<#name> for bool {
+            type Output = bool;
+
+            fn bitand(self, other: #name) -> Self::Output {
+                self & other.yes()
+            }
+        }
+
         impl std::ops::BitAndAssign for #name {
             fn bitand_assign(&mut self, other: Self) {
                 *self = self.and(other);
@@ -134,6 +150,22 @@ pub fn yes_or_no(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             }
         }
 
+        impl std::ops::BitOr<bool> for #name {
+            type Output = bool;
+
+            fn bitor(self, other: bool) -> Self::Output {
+                self.yes() | other
+            }
+        }
+
+        impl std::ops::BitOr<#name> for bool {
+            type Output = bool;
+
+            fn bitor(self, other: #name) -> Self::Output {
+                self | other.yes()
+            }
+        }
+
         impl std::ops::BitOrAssign for #name {
             fn bitor_assign(&mut self, other: Self) {
                 *self = self.or(other);
@@ -145,6 +177,22 @@ pub fn yes_or_no(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
             fn bitxor(self, other: Self) -> Self::Output {
                 self.xor(other)
+            }
+        }
+
+        impl std::ops::BitXor<bool> for #name {
+            type Output = bool;
+
+            fn bitxor(self, other: bool) -> Self::Output {
+                self.yes() ^ other
+            }
+        }
+
+        impl std::ops::BitXor<#name> for bool {
+            type Output = bool;
+
+            fn bitxor(self, other: #name) -> Self::Output {
+                self ^ other.yes()
             }
         }
 
