@@ -106,9 +106,9 @@ pub fn yes_or_no(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             }
         }
 
-        impl Into<bool> for #name {
-            fn into(self) -> bool {
-                self.yes()
+        impl From<#name> for bool {
+            fn from(opt: #name) -> Self {
+                opt.yes()
             }
         }
 
